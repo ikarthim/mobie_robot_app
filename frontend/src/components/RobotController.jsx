@@ -108,9 +108,18 @@ const RobotController = () => {
   };
 
   const sendCommand = (command) => {
-    if (!isConnected || !wsRef.current) return;
+    if (!isConnected || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.log('Cannot send command: WebSocket not connected');
+      return;
+    }
     
-    wsRef.current.send(command);
+    // Send command to backend WebSocket
+    wsRef.current.send(JSON.stringify({ 
+      type: 'command', 
+      command: command,
+      timestamp: Date.now()
+    }));
+    
     setActiveCommand(command);
     
     // Clear active command after a brief moment for visual feedback
