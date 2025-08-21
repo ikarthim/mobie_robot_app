@@ -231,7 +231,8 @@ class RobotControllerTester:
         ws_url = f"{self.ws_base_url}/api/ws/robot/{test_ip}"
         
         try:
-            async with websockets.connect(ws_url, timeout=10) as websocket:
+            websocket = await websockets.connect(ws_url)
+            async with websocket:
                 # Send disconnect message
                 disconnect_msg = {"type": "disconnect"}
                 await websocket.send(json.dumps(disconnect_msg))
