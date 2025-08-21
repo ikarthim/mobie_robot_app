@@ -156,7 +156,8 @@ const RobotController = () => {
 
   useEffect(() => {
     return () => {
-      if (wsRef.current) {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ type: 'disconnect' }));
         wsRef.current.close();
       }
       clearTimeout(commandTimeoutRef.current);
