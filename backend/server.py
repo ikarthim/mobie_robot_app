@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List
 import uuid
 from datetime import datetime
-from websocket_handler import websocket_endpoint
+from .websocket_handler import websocket_endpoint
 
 
 ROOT_DIR = Path(__file__).parent
