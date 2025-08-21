@@ -17,7 +17,7 @@ import {
   Zap,
   Settings
 } from 'lucide-react';
-import { mockWebSocket } from '../utils/mock';
+// Removed mock import - using real WebSocket connection
 
 const RobotController = () => {
   const [ipAddress, setIpAddress] = useState('192.168.1.22');
