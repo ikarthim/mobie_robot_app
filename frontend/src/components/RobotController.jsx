@@ -43,7 +43,10 @@ const RobotController = () => {
       
       // Construct proper WebSocket URL
       let wsUrl;
-      if (backendUrl.startsWith('https://')) {
+      if (backendUrl.includes('emergentagent.com')) {
+        // For production Emergent platform
+        wsUrl = `${backendUrl.replace('https://', 'wss://')}/api/ws/robot/${ipAddress}`;
+      } else if (backendUrl.startsWith('https://')) {
         wsUrl = `${backendUrl.replace('https://', 'wss://')}/api/ws/robot/${ipAddress}`;
       } else if (backendUrl.startsWith('http://')) {
         wsUrl = `${backendUrl.replace('http://', 'ws://')}/api/ws/robot/${ipAddress}`;
