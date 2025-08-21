@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, WebSocket
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List
 import uuid
 from datetime import datetime
+from .websocket_handler import websocket_endpoint
 
 
 ROOT_DIR = Path(__file__).parent
@@ -52,13 +53,19 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
+# WebSocket endpoint for robot control
+@api_router.websocket("/ws/robot/{ip_address}")
+async def robot_websocket(websocket: WebSocket, ip_address: str):
+    """WebSocket endpoint for robot control"""
+    await websocket_endpoint(websocket, ip_address)
+
 # Include the router in the main app
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
