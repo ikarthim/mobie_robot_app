@@ -258,7 +258,7 @@ class RobotControllerTester:
             # Open multiple connections
             for ip in test_ips:
                 ws_url = f"{self.ws_base_url}/api/ws/robot/{ip}"
-                websocket = await websockets.connect(ws_url, timeout=10)
+                websocket = await websockets.connect(ws_url)
                 connections.append(websocket)
             
             # Send connect message to all
