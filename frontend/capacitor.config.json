@@ -1,5 +1,14 @@
 {
   "appId": "com.robotcontroller.app",
   "appName": "Robot Controller",
-  "webDir": "www"
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
 }
