@@ -39,8 +39,20 @@ const RobotController = () => {
     
     try {
       // Create WebSocket connection to backend
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'ws://localhost:8001';
-      const wsUrl = `${backendUrl.replace('http', 'ws')}/api/ws/robot/${ipAddress}`;
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+      
+      // Construct proper WebSocket URL
+      let wsUrl;
+      if (backendUrl.startsWith('https://')) {
+        wsUrl = `${backendUrl.replace('https://', 'wss://')}/api/ws/robot/${ipAddress}`;
+      } else if (backendUrl.startsWith('http://')) {
+        wsUrl = `${backendUrl.replace('http://', 'ws://')}/api/ws/robot/${ipAddress}`;
+      } else {
+        // Fallback for localhost development
+        wsUrl = `ws://localhost:8001/api/ws/robot/${ipAddress}`;
+      }
+      
+      console.log('Attempting WebSocket connection to:', wsUrl);
       
       const ws = new WebSocket(wsUrl);
       
