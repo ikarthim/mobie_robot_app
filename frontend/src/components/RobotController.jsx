@@ -58,8 +58,9 @@ const RobotController = () => {
       
       // WebSocket event handlers
       ws.onopen = () => {
-        console.log('WebSocket connected to backend');
+        console.log('WebSocket connected to backend successfully');
         setConnectionStatus('Establishing robot connection...');
+        setIsConnecting(false);
         
         // Request robot connection
         ws.send(JSON.stringify({ type: 'connect' }));
@@ -68,19 +69,24 @@ const RobotController = () => {
       ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          console.log('Received message:', message);
+          console.log('Received message from backend:', message);
           
           if (message.type === 'status' && message.connected) {
             setIsConnected(true);
             setConnectionStatus('Connected');
           } else if (message.type === 'error') {
-            setConnectionStatus('Connection Failed');
+            if (message.message.includes('Failed to connect to robot')) {
+              setConnectionStatus('Robot Unreachable');
+            } else {
+              setConnectionStatus('Connection Failed');
+            }
+            setIsConnected(false);
             console.error('Robot connection error:', message.message);
           } else if (message.type === 'acknowledgment') {
             console.log('Command acknowledged:', message.command);
           }
         } catch (e) {
-          console.error('Error parsing message:', e);
+          console.error('Error parsing WebSocket message:', e);
         }
       };
       
@@ -88,12 +94,14 @@ const RobotController = () => {
         console.error('WebSocket error:', error);
         setConnectionStatus('WebSocket Error');
         setIsConnecting(false);
+        setIsConnected(false);
       };
       
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
         setIsConnected(false);
         setConnectionStatus('Disconnected');
+        setIsConnecting(false);
         wsRef.current = null;
       };
       
