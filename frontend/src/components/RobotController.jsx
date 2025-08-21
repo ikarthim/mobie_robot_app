@@ -30,7 +30,7 @@ const RobotController = () => {
   const wsRef = useRef(null);
   const commandTimeoutRef = useRef(null);
 
-  // Mock WebSocket connection
+  // Real WebSocket connection to backend
   const connect = async () => {
     if (!ipAddress.trim()) return;
     
@@ -38,14 +38,58 @@ const RobotController = () => {
     setConnectionStatus('Connecting...');
     
     try {
-      // Using mock WebSocket for frontend demo
-      wsRef.current = await mockWebSocket.connect(ipAddress);
-      setIsConnected(true);
-      setConnectionStatus('Connected');
+      // Create WebSocket connection to backend
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'ws://localhost:8001';
+      const wsUrl = `${backendUrl.replace('http', 'ws')}/api/ws/robot/${ipAddress}`;
+      
+      const ws = new WebSocket(wsUrl);
+      
+      // WebSocket event handlers
+      ws.onopen = () => {
+        console.log('WebSocket connected to backend');
+        setConnectionStatus('Establishing robot connection...');
+        
+        // Request robot connection
+        ws.send(JSON.stringify({ type: 'connect' }));
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('Received message:', message);
+          
+          if (message.type === 'status' && message.connected) {
+            setIsConnected(true);
+            setConnectionStatus('Connected');
+          } else if (message.type === 'error') {
+            setConnectionStatus('Connection Failed');
+            console.error('Robot connection error:', message.message);
+          } else if (message.type === 'acknowledgment') {
+            console.log('Command acknowledged:', message.command);
+          }
+        } catch (e) {
+          console.error('Error parsing message:', e);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionStatus('WebSocket Error');
+        setIsConnecting(false);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setIsConnected(false);
+        setConnectionStatus('Disconnected');
+        wsRef.current = null;
+      };
+      
+      wsRef.current = ws;
+      
     } catch (error) {
       setConnectionStatus('Connection Failed');
       console.error('Connection error:', error);
-    } finally {
       setIsConnecting(false);
     }
   };
