@@ -96,12 +96,15 @@ const RobotController = () => {
 
   const disconnect = () => {
     if (wsRef.current) {
+      // Send disconnect message to backend
+      wsRef.current.send(JSON.stringify({ type: 'disconnect' }));
       wsRef.current.close();
       wsRef.current = null;
     }
     setIsConnected(false);
     setConnectionStatus('Disconnected');
     setActiveCommand('');
+    setIsConnecting(false);
   };
 
   const sendCommand = (command) => {
