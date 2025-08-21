@@ -235,19 +235,27 @@ class RobotControllerTester:
         
         try:
             websocket = await websockets.connect(ws_url)
-            async with websocket:
-                # Send disconnect message
-                disconnect_msg = {"type": "disconnect"}
-                await websocket.send(json.dumps(disconnect_msg))
-                
-                # Connection should close
-                try:
-                    await asyncio.wait_for(websocket.recv(), timeout=3)
-                    self.log_test_result("Disconnect Handling", False, "Connection should have closed after disconnect")
-                except ConnectionClosedError:
+            
+            # Send disconnect message
+            disconnect_msg = {"type": "disconnect"}
+            await websocket.send(json.dumps(disconnect_msg))
+            
+            # Connection should close - wait a bit for the server to process
+            await asyncio.sleep(0.5)
+            
+            # Try to send another message - should fail
+            try:
+                test_msg = {"type": "connect"}
+                await websocket.send(json.dumps(test_msg))
+                self.log_test_result("Disconnect Handling", False, "Connection should have closed after disconnect")
+            except ConnectionClosedError:
+                self.log_test_result("Disconnect Handling", True, "Connection properly closed on disconnect")
+            except Exception as e:
+                # Connection might be closed in different ways
+                if "closed" in str(e).lower():
                     self.log_test_result("Disconnect Handling", True, "Connection properly closed on disconnect")
-                except asyncio.TimeoutError:
-                    self.log_test_result("Disconnect Handling", False, "Connection did not close after disconnect")
+                else:
+                    self.log_test_result("Disconnect Handling", False, f"Unexpected error: {e}")
                 
         except Exception as e:
             self.log_test_result("Disconnect Handling", False, f"Test failed: {str(e)}")
