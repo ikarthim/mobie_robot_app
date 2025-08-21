@@ -91,26 +91,28 @@ class RobotControllerTester:
         
         try:
             websocket = await websockets.connect(ws_url)
-            
             self.log_test_result("WebSocket Connection (Valid IP)", True, f"Connected to {test_ip}")
             
-            # Test sending a connect message
-            connect_msg = {"type": "connect"}
-            await websocket.send(json.dumps(connect_msg))
+            try:
+                # Test sending a connect message
+                connect_msg = {"type": "connect"}
+                await websocket.send(json.dumps(connect_msg))
+                
+                # Wait for response
+                response = await asyncio.wait_for(websocket.recv(), timeout=5)
+                response_data = json.loads(response)
+                
+                # Should get an error since we can't actually connect to a robot
+                if response_data.get("type") == "error" and "Failed to connect to robot" in response_data.get("message", ""):
+                    self.log_test_result("Robot Connection Attempt", True, "TCP connection failed as expected")
+                elif response_data.get("type") == "status" and response_data.get("connected") == True:
+                    self.log_test_result("Robot Connection Attempt", True, "Unexpected success - robot actually connected")
+                else:
+                    self.log_test_result("Robot Connection Attempt", False, f"Unexpected response: {response_data}")
+                
+            finally:
+                await websocket.close()
             
-            # Wait for response
-            response = await asyncio.wait_for(websocket.recv(), timeout=5)
-            response_data = json.loads(response)
-            
-            # Should get an error since we can't actually connect to a robot
-            if response_data.get("type") == "error" and "Failed to connect to robot" in response_data.get("message", ""):
-                self.log_test_result("Robot Connection Attempt", True, "TCP connection failed as expected")
-            elif response_data.get("type") == "status" and response_data.get("connected") == True:
-                self.log_test_result("Robot Connection Attempt", True, "Unexpected success - robot actually connected")
-            else:
-                self.log_test_result("Robot Connection Attempt", False, f"Unexpected response: {response_data}")
-            
-            await websocket.close()
             return True
                 
         except Exception as e:
