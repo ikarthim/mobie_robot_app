@@ -3,7 +3,7 @@ import json
 import logging
 from typing import Dict, Optional
 from fastapi import WebSocket, WebSocketDisconnect
-from .robot_controller import RobotController
+from robot_controller import RobotController
 import ipaddress
 
 logger = logging.getLogger(__name__)
